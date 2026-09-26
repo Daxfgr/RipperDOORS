@@ -7,7 +7,7 @@ local Spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Regul
 local Ripper = Spawner:Create({
 	Entity = {
 		Name = "Ripper",
-		Asset = "https://github.com/Daxfgr/RipperDOORS/blob/main/Assets/Ripper.rbxm?raw=true",
+		Asset = "https://raw.githubusercontent.com/Daxfgr/RipperDOORS/refs/heads/main/Assets/Ripper.rbxm",
 		HeightOffset = 0
 	},
 	Lights = {
@@ -28,7 +28,7 @@ local Ripper = Spawner:Create({
 	},
 	Movement = {
 		Speed = 100,
-		Delay = 8,
+		Delay = 5,
 		Reversed = false
 	},
 	Rebounding = {
@@ -61,7 +61,16 @@ local Ripper = Spawner:Create({
 ---====== Debug entity ======---
 
 Ripper:SetCallback("OnSpawned", function()
-    print("Entity has spawned")
+	print("Entity has spawned")
+    Ripper.Model.RipperSpawn:Play()
+	Ripper.Model:GetAttributeChangedSignal("BeingBanished"):Connect(function()
+		if Ripper.Model:GetAttribute("BeingBanished") then
+			print("Entity was crucified")
+
+			Ripper.Model.RipperNew.Attachment.Ripper.Face.Texture = "rbxassetid://11816152645"
+			Ripper.Model.RipperNew.Repent:Play()
+		end
+	end)
 end)
 
 Ripper:SetCallback("OnStartMoving", function()
@@ -93,6 +102,8 @@ end)
 
 Ripper:SetCallback("OnDespawning", function()
     print("Entity is despawning")
+    Ripper.Model.Missing:Play()
+end)
 
 Ripper:SetCallback("OnDespawned", function()
     print("Entity has despawned")
@@ -106,9 +117,16 @@ Ripper:SetCallback("OnDamagePlayer", function(newHealth: number)
 	end
 end)
 
-Ripper:SetCallback("CrucifixionOverwrite", function()
+--[[
+
+DEVELOPER NOTE:
+By overwriting 'CrucifixionOverwrite' the default crucifixion callback will be replaced with your custom callback.
+
+Ripper.Debug.CrucifixionOverwrite = function()
     print("Custom crucifixion callback")
-end)
+end
+
+]]--
 
 ---====== Run entity ======---
 
