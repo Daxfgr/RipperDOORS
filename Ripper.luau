@@ -47,7 +47,7 @@ local Ripper = Spawner:Create({
 	Crucifixion = {
         Type = "Guiding",
 		Enabled = true,
-		Range = 40,
+		Range = 50,
 		Resist = false,
 		Break = true
 	},
