@@ -201,6 +201,95 @@ Ripper:SetCallback("OnDamagePlayer", function(newHealth: number)
         print("Entity has killed the player")
     else
         print("Entity has damaged the player")
+
+	local function playNoiseFade()
+		local Players = game:GetService("Players")
+		local ContentProvider = game:GetService("ContentProvider")
+
+		local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+
+		local ids = {8482795900, 236542974, 184251462, 236777652}
+
+		local gui = Instance.new("ScreenGui")
+		gui.IgnoreGuiInset = true
+		gui.ResetOnSpawn = false
+		gui.DisplayOrder = 999
+		gui.Parent = playerGui
+
+		local images = {}
+		local assets = {}
+
+		for i, id in ipairs(ids) do
+			local url = "rbxassetid://" .. id
+			table.insert(assets, url)
+
+			local img = Instance.new("ImageLabel")
+			img.Size = UDim2.new(1, 0, 1, 0)
+			img.BackgroundTransparency = 1
+			img.BorderSizePixel = 0
+			img.ScaleType = Enum.ScaleType.Crop
+			img.Image = url
+			img.ImageTransparency = 1
+			img.Visible = false
+			img.ZIndex = i
+			img.Parent = gui
+
+			images[i] = img
+		end
+
+		ContentProvider:PreloadAsync(assets)
+
+		local function setTransparency(t)
+			for _, img in ipairs(images) do
+				img.ImageTransparency = t
+			end
+		end
+
+		local switching = true
+
+		task.spawn(function()
+			local index = 1
+			while gui.Parent do
+				if switching then
+					for i = 1, #images do
+						images[i].Visible = false
+					end
+					images[index].Visible = true
+					index = index + 1
+					if index > #images then
+						index = 1
+					end
+				end
+				task.wait(0.03)
+			end
+		end)
+
+		setTransparency(1)
+		task.wait(1)
+
+		local start = os.clock()
+		while os.clock() - start < 1 do
+			setTransparency(1 - (os.clock() - start))
+			task.wait()
+		end
+		setTransparency(0)
+
+		task.wait(1)
+
+		switching = false
+
+		start = os.clock()
+		while os.clock() - start < 1 do
+			setTransparency(os.clock() - start)
+			task.wait()
+		end
+		setTransparency(1)
+
+		gui:Destroy()
+	end
+
+		task.spawn(playNoiseFade)
+
         SkipMissing = true
         Ripper:Pause()
         local model = Ripper.Model
@@ -266,6 +355,13 @@ Ripper:SetCallback("OnDamagePlayer", function(newHealth: number)
                         task.wait()
                     end
                     staticSound.Volume = 10
+
+                    -- Kill the player immediately.
+                    task.spawn(function()
+						task.wait(0.53)
+                        KillPlayerAsEntity(Ripper)
+                    end)
+
                     task.wait(1)
                     if not Ripper:IsAlive()
                         or model:GetAttribute("Despawning") then
@@ -284,11 +380,6 @@ Ripper:SetCallback("OnDamagePlayer", function(newHealth: number)
 
                     local reached = false
                     local connection
-
-                    -- Kill the player immediately.
-                    task.spawn(function()
-                        KillPlayerAsEntity(Ripper)
-                    end)
 
                     -- Start the fade immediately.
                     task.spawn(function()
