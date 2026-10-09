@@ -167,6 +167,8 @@ local ripper = Spawner:Create({
 	}
 })
 
+local Jumpscaring = false
+
 ---====== Debug ripper ======---
 
 ripper:SetCallback("OnSpawned", function()
@@ -281,10 +283,46 @@ end)
 
 ripper:SetCallback("OnDespawning", function()
     print("Ripper is despawning")
+
+	if Jumpscaring == true then
+		return
+	end
+
+	local Players = game:GetService("Players")
+
+	local Player = Players.LocalPlayer
+	local PlayerGui = Player:WaitForChild("PlayerGui")
+
+	local MainUI = PlayerGui:WaitForChild("MainUI")
+	local Initiator = MainUI:WaitForChild("Initiator")
+	local Main_Game = require(Initiator:WaitForChild("Main_Game"))
+
+	local Values = {10, 20, 0.1, 1}
+
+	Main_Game.camShaker:ShakeOnce(Values[1], Values[2], Values[3], Values[4])
+
+	ripper.Model.Missing:Play()
 end)
 
 ripper:SetCallback("OnDespawned", function()
     print("Ripper has despawned")
+
+	local CustomAchievements = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/DOORS-Custom-Achievements/main/init.luau"))()
+
+	if CustomAchievements:CheckOwned("TestAchievement") then
+    	CustomAchievements:Revoke("TestAchievement")
+	end
+
+	CustomAchievements:Grant({
+    	Identifier = "Doors Hardcore Ripper Achievement",
+    	Title = "Torn Apart",
+    	Desc = "Dont leave too early.",
+    	Reason = "Encounter Ripper.",
+    	Image = "rbxassetid://11547914686"
+	}, {
+    	CheckOwned = true,
+    	Remember = true
+	})
 end)
 
 ripper:SetCallback("OnDamagePlayer", function(newHealth: number)
@@ -292,6 +330,8 @@ ripper:SetCallback("OnDamagePlayer", function(newHealth: number)
 		print("Ripper has killed the player")
 	else
 		print("Ripper has damaged the player")
+
+		Jumpscaring = true	
 	end
 end)
 
