@@ -2,18 +2,127 @@
 
 local Spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/DOORS-Entity-Spawner-V2/main/init.luau"))()
 
----====== Create entity ======---
+---====== Create ripper ======---
+
+---====== Red Light Fixture Effect ======---
+task.spawn(function()
+    local RunService = game:GetService("RunService")
+    local RED = Color3.fromRGB(255, 0, 0)
+    local NEON_RED = Color3.fromRGB(255, 80, 80)
+    local FADE_IN_TIME = 2
+    local FADE_OUT_TIME = 60
+    -- Stop the previous effect if it exists.
+    local previousStop = getgenv().LightFixtureColorEffectStop
+    if previousStop then
+        previousStop()
+    end
+    local stopped = false
+    local objects = {}
+    local function StopEffect()
+        stopped = true
+    end
+    getgenv().LightFixtureColorEffectStop = StopEffect
+    -- Track supported objects inside LightFixture models.
+    local function TrackObject(object)
+        if objects[object] then
+            return
+        end
+        local fixture = object:FindFirstAncestor("LightFixture")
+        if not fixture then
+            return
+        end
+        local targetColor
+        if object:IsA("PointLight")
+            or object:IsA("SpotLight")
+            or object:IsA("SurfaceLight") then
+            targetColor = RED
+        elseif object:IsA("BasePart")
+            and object.Name == "Neon" then
+            targetColor = NEON_RED
+        end
+        if not targetColor then
+            return
+        end
+        objects[object] = {
+            OriginalColor = object.Color,
+            TargetColor = targetColor
+        }
+    end
+    -- Find existing fixtures.
+    for _, object in ipairs(game:GetDescendants()) do
+        TrackObject(object)
+    end
+    -- Detect new fixtures and objects added later.
+    local descendantConnection = game.DescendantAdded:Connect(function(object)
+        TrackObject(object)
+        if object.Name == "LightFixture" then
+            for _, child in ipairs(object:GetDescendants()) do
+                TrackObject(child)
+            end
+        end
+    end)
+    local startTime = os.clock()
+    while not stopped do
+        local elapsed = os.clock() - startTime
+        local alpha
+        local fadingOut = false
+        if elapsed < FADE_IN_TIME then
+            alpha = math.clamp(elapsed / FADE_IN_TIME, 0, 1)
+        else
+            fadingOut = true
+            alpha = math.clamp(
+                (elapsed - FADE_IN_TIME) / FADE_OUT_TIME,
+                0,
+                1
+            )
+        end
+        for object, data in pairs(objects) do
+            if object.Parent then
+                if fadingOut then
+                    object.Color = data.TargetColor:Lerp(
+                        data.OriginalColor,
+                        alpha
+                    )
+                else
+                    object.Color = data.OriginalColor:Lerp(
+                        data.TargetColor,
+                        alpha
+                    )
+                end
+            else
+                objects[object] = nil
+            end
+        end
+        if fadingOut and alpha >= 1 then
+            break
+        end
+        RunService.Heartbeat:Wait()
+    end
+    descendantConnection:Disconnect()
+    -- Only clear the stop function if this is still the active effect.
+    if getgenv().LightFixtureColorEffectStop == StopEffect then
+        getgenv().LightFixtureColorEffectStop = nil
+    end
+    -- Restore original colors if the effect ended naturally.
+    if not stopped then
+        for object, data in pairs(objects) do
+            if object.Parent then
+                object.Color = data.OriginalColor
+            end
+        end
+    end
+end)
 
 local ripper = Spawner:Create({
-	Ripper = {
+	Entity = {
 		Name = "Ripper",
-		Asset = "https://github.com/RegularVynixu/DOORS-Entity-Spawner-V2/raw/main/Assets/Entities/Rush.rbxm",
+		Asset = "https://raw.githubusercontent.com/Daxfgr/RipperDOORS/main/Assets/Ripper%20Old.rbxm",
 		HeightOffset = 0
 	},
 	Lights = {
 		Flicker = {
 			Enabled = false,
-			Duration = 1
+			Duration = 0
 		},
 		Shatter = false,
 		Repair = false
@@ -58,66 +167,12 @@ local ripper = Spawner:Create({
 	}
 })
 
----====== Debug entity ======---
+---====== Debug ripper ======---
 
 ripper:SetCallback("OnSpawned", function()
-    print("Entity has spawned")
+    print("Ripper has spawned")
 
     ripper.Model.RipperSpawn:Play()
-
-    local CollectionService = game:GetService("CollectionService")
-    local Players = game:GetService("Players")
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-    local player = Players.LocalPlayer
-    local playerGui = player.PlayerGui
-
-    local Module_Events = require(ReplicatedStorage.ModulesClient.Module_Events)
-    local Main_Game = require(playerGui.MainUI.Initiator.Main_Game)
-
-    local currentRoom = workspace.CurrentRooms[ReplicatedStorage.GameData.LatestRoom.Value]
-
-    Module_Events.flicker(currentRoom, 4)
-
-    Main_Game.camShaker:ShakeOnce(4, 12, 1, 5)
-    Main_Game.camShaker:ShakeOnce(10, 2, 3, 3)
-
-    local Earthquake = LoadCustomInstance("https://github.com/RegularVynixu/DOORS-Entity-Spawner-V2/raw/main/Assets/Earthquake.rbxm")
-    Earthquake.Parent = workspace
-
-    local SoundEarthquake = Earthquake:FindFirstChild("SoundEarthquake", true)
-    if SoundEarthquake then
-        SoundEarthquake:Play()
-    end
-
-    local Particles = Earthquake:FindFirstChild("Particles", true)
-
-    for _, Particle in ipairs(Particles:GetDescendants()) do
-        if Particle:IsA("ParticleEmitter") then
-            for _, Ceiling in ipairs(CollectionService:GetTagged("PartCeiling")) do
-                if Ceiling:IsA("BasePart") then
-                    local Clone = Particle:Clone()
-                    Clone.Parent = Ceiling
-
-                    local Amount = math.clamp(Ceiling.Size.Magnitude * 0.7, 0, 150)
-                    Clone:Emit(Amount / 10)
-                end
-            end
-        end
-    end
-
-    task.wait(4)
-
-    for _, Ceiling in ipairs(CollectionService:GetTagged("PartCeiling")) do
-        for _, Particle in ipairs(Ceiling:GetChildren()) do
-            if Particle:IsA("ParticleEmitter") then
-                Particle.Enabled = false
-                Particle:Destroy()
-            end
-        end
-    end
-
-    Earthquake:Destroy()
 
     ripper.Model:GetAttributeChangedSignal("BeingBanished"):Connect(function()
         if ripper.Model:GetAttribute("BeingBanished") then
@@ -127,23 +182,90 @@ ripper:SetCallback("OnSpawned", function()
             ripper.Model.RipperNew.Repent:Play()
         end
     end)
+
+    task.wait(1)
+
+    local Players = game:GetService("Players")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local CollectionService = game:GetService("CollectionService")
+
+    local Player = Players.LocalPlayer
+    local PlayerGui = Player:WaitForChild("PlayerGui")
+
+    local Modules = {
+        Module_Events = require(ReplicatedStorage.ModulesClient.Module_Events),
+        Main_Game = require(PlayerGui.MainUI.Initiator.Main_Game)
+    }
+
+    local ROOT = "https://github.com/RegularVynixu/DOORS-Entity-Spawner-V2/raw/main"
+
+    local Assets = {
+        Earthquake = LoadCustomInstance(ROOT .. "/Assets/Earthquake.rbxm")
+    }
+
+    local Room = workspace.CurrentRooms:FindFirstChild(
+        tostring(Player:GetAttribute("CurrentRoom"))
+    )
+
+    if not Room then
+        Assets.Earthquake:Destroy()
+        return
+    end
+
+    -- Original Vynixu flicker function
+    task.spawn(function()
+        Modules.Module_Events.flicker(Room, 3)
+    end)
+
+    -- Original Vynixu Earthquake function
+    task.spawn(function()
+        Modules.Main_Game.camShaker:ShakeOnce(4, 12, 1, 5)
+        Modules.Main_Game.camShaker:ShakeOnce(10, 2, 3, 3)
+
+        Assets.Earthquake.SoundEarthquake:Play()
+
+        local v5 = CollectionService:GetTagged("PartCeiling")
+        local v6 = {}
+
+        for _, v7 in v5 do
+            local v8 = v7.Size.Magnitude * 0.7
+            local v9 = math.clamp(v8, 0, 150)
+
+            for _, v10 in Assets.Earthquake.Particles:GetChildren() do
+                local v11 = v10:Clone()
+                v11.Parent = v7
+                v11:Emit(v9 / 10)
+                v11.Enabled = true
+                table.insert(v6, v11)
+            end
+        end
+
+        task.wait(3)
+
+        for _, v12 in v6 do
+            v12.Enabled = false
+        end
+
+        Assets.Earthquake.SoundEarthquake:Stop()
+        Assets.Earthquake:Destroy()
+    end)
 end)
 
 ripper:SetCallback("OnStartMoving", function()
-    print("Entity has started moving")
+    print("Ripper has started moving")
 end)
 
 ripper:SetCallback("OnEnterRoom", function(room: Model, firstTime: boolean)
     if firstTime == true then
-        print("Entity has entered room: ".. room.Name.. " for the first time")
+        print("Ripper has entered room: ".. room.Name.. " for the first time")
     else
-        print("Entity has entered room: ".. room.Name.. " again")
+        print("Ripper has entered room: ".. room.Name.. " again")
     end
 end)
 
 ripper:SetCallback("OnLookAt", function(lineOfSight: boolean)
 	if lineOfSight == true then
-		print("Player is looking at entity")
+		print("Player is looking at ripper")
 	else
 		print("Player view is obstructed by something")
 	end
@@ -151,25 +273,25 @@ end)
 
 ripper:SetCallback("OnRebounding", function(startOfRebound: boolean)
     if startOfRebound == true then
-        print("Entity has started rebounding")
+        print("Ripper has started rebounding")
 	else
-        print("Entity has finished rebounding")
+        print("Ripper has finished rebounding")
 	end
 end)
 
 ripper:SetCallback("OnDespawning", function()
-    print("Entity is despawning")
+    print("Ripper is despawning")
 end)
 
 ripper:SetCallback("OnDespawned", function()
-    print("Entity has despawned")
+    print("Ripper has despawned")
 end)
 
 ripper:SetCallback("OnDamagePlayer", function(newHealth: number)
 	if newHealth <= 0 then
-		print("Entity has killed the player")
+		print("Ripper has killed the player")
 	else
-		print("Entity has damaged the player")
+		print("Ripper has damaged the player")
 	end
 end)
 
@@ -186,4 +308,4 @@ end)
 
 ---====== Run entity ======---
 
-entity:Run(true)
+ripper:Run(true)
