@@ -57,17 +57,18 @@ end
 
 print("All assets updated successfully.")
 
----====== Load local model ======---
+local function LoadLocalRbxm(path)
+    local asset = getcustomasset(path)
+    local objects = game:GetObjects(asset)
+    for _, object in ipairs(objects) do
+        if object:IsA("Model") then
+            return object
+        end
+    end
+    error("Nenhum Model encontrado em: " .. path)
+end
 
-local ModelFile = "Ripper Old.rbxm"
-
-assert(isfile(ModelFile), "Ripper model file not found")
-
-local AssetPath = getcustomasset(ModelFile)
-local Objects = game:GetObjects(AssetPath)
-local RipperModel = Objects[1]
-
-assert(RipperModel, "Failed to load Ripper model")
+local RipperModel = LoadLocalRbxm("Ripper Old.rbxm")
 
 local ripper = Spawner:Create({
 	Ripper = {
