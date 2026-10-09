@@ -4,76 +4,10 @@ local Spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Regul
 
 ---====== Create entity ======---
 
----====== Configuration ======---
-
-local GitHubToken = "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"
-
-local Repository = "Daxfgr/RipperDOORS"
-local Branch = "main"
-
----====== Download files ======---
-
-local Files = {
-    {
-        Name = "Ripper Old.rbxm",
-        Path = "Assets/Ripper%20Old.rbxm"
-    },
-    {
-        Name = "Ripper Jumpscare.mp3",
-        Path = "Assets/Ripper%20Jumpscare.mp3"
-    }
-}
-
----====== Update local assets ======---
-
-for _, File in ipairs(Files) do
-    local Response = request({
-        Url = "https://api.github.com/repos/" .. Repository
-            .. "/contents/" .. File.Path .. "?ref=" .. Branch,
-        Method = "GET",
-        Headers = {
-            ["Authorization"] = "Bearer " .. GitHubToken,
-            ["Accept"] = "application/vnd.github.raw",
-            ["X-GitHub-Api-Version"] = "2022-11-28"
-        }
-    })
-
-    assert(
-        Response.StatusCode == 200,
-        "Failed to download " .. File.Name
-            .. " (HTTP " .. tostring(Response.StatusCode) .. ")"
-    )
-
-    if isfile(File.Name) then
-        delfile(File.Name)
-    end
-
-    writefile(File.Name, Response.Body)
-
-    print("Updated: " .. File.Name)
-end
-
----====== Completion ======---
-
-print("All assets updated successfully.")
-
-local function LoadLocalRbxm(path)
-    local asset = getcustomasset(path)
-    local objects = game:GetObjects(asset)
-    for _, object in ipairs(objects) do
-        if object:IsA("Model") then
-            return object
-        end
-    end
-    error("Nenhum Model encontrado em: " .. path)
-end
-
-local RipperModel = LoadLocalRbxm("Ripper Old.rbxm")
-
 local ripper = Spawner:Create({
 	Ripper = {
 		Name = "Ripper",
-		Asset = RipperModel,
+		Asset = "https://github.com/RegularVynixu/DOORS-Entity-Spawner-V2/raw/main/Assets/Entities/Rush.rbxm",
 		HeightOffset = 0
 	},
 	Lights = {
