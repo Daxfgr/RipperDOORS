@@ -330,7 +330,6 @@ ripper:SetCallback("OnDamagePlayer", function(newHealth: number)
 		print("Ripper has killed the player")
 	else
 		print("Ripper has damaged the player")
-
 		Jumpscaring = true	
 	end
 end)
