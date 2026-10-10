@@ -178,7 +178,7 @@ ripper:SetCallback("OnSpawned", function()
 
     ripper.Model:GetAttributeChangedSignal("BeingBanished"):Connect(function()
         if ripper.Model:GetAttribute("BeingBanished") then
-            print("Entity was crucified")
+            print("Ripper was crucified")
 
             ripper.Model.RipperNew.Attachment.Ripper.Face.Texture = "rbxassetid://11816152645"
             ripper.Model.RipperNew.Repent:Play()
