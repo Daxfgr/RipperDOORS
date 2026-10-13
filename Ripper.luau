@@ -116,7 +116,7 @@ end)
 local ripper = Spawner:Create({
 	Entity = {
 		Name = "Ripper",
-		Asset = "https://raw.githubusercontent.com/Daxfgr/RipperDOORS/main/Assets/Ripper%20Old.rbxm",
+		Asset = "https://raw.githubusercontent.com/Daxfgr/RipperDOORS/refs/heads/main/Assets/Ripper.rbxm",
 		HeightOffset = 0
 	},
 	Lights = {
