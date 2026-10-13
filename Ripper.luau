@@ -318,7 +318,7 @@ ripper:SetCallback("OnDespawned", function()
     	Title = "Torn Apart",
     	Desc = "Dont leave too early.",
     	Reason = "Encounter Ripper.",
-    	Image = "rbxassetid://11547914686"
+    	Image = "rbxassetid://"
 	}, {
     	CheckOwned = true,
     	Remember = true
