@@ -180,7 +180,7 @@ ripper:SetCallback("OnSpawned", function()
         if ripper.Model:GetAttribute("BeingBanished") then
             print("Ripper was crucified")
 
-            ripper.Model.RipperNew.Attachment.Ripper.Face.Texture = "rbxassetid://11816152645"
+            ripper.Model.RipperNew.Attachment.Ripper.Face.Texture = "rbxassetid://95186345184705"
             ripper.Model.RipperNew.Repent:Play()
         end
     end)
@@ -318,7 +318,7 @@ ripper:SetCallback("OnDespawned", function()
     	Title = "Torn Apart",
     	Desc = "Dont leave too early.",
     	Reason = "Encounter Ripper.",
-    	Image = "rbxassetid://"
+    	Image = "rbxassetid://131676256035164"
 	}, {
     	CheckOwned = true,
     	Remember = true
