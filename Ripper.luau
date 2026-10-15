@@ -174,8 +174,6 @@ local Jumpscaring = false
 ripper:SetCallback("OnSpawned", function()
     print("Ripper has spawned")
 
-    ripper.Model.RipperSpawn:Play()
-
     ripper.Model:GetAttributeChangedSignal("BeingBanished"):Connect(function()
         if ripper.Model:GetAttribute("BeingBanished") then
             print("Ripper was crucified")
